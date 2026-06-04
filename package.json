@@ -1,0 +1,14 @@
+{
+  "name": "bot-projesi",
+  "version": "1.0.0",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "mineflayer": "^4.19.0",
+    "mineflayer-pathfinder": "^2.4.4",
+    "vec3": "^0.1.9",
+    "express": "^4.18.2"
+  }
+}
