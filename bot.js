@@ -83,7 +83,7 @@ async function startSystem() {
 
   for (const name of botNames) {
     await createBot(name, true);
-    await new Promise((resolve) => setTimeout(resolve, 15000));
+    await new Promise((resolve) => setTimeout(resolve, 20000));
   }
   safeLog("\n[!] Tüm botlar sıraya girdi.");
 }
