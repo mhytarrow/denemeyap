@@ -102,7 +102,7 @@ function createBot(username, isInitial = false) {
     let botPhase = 1;
     let reconnecting = false;
     
-    // Kilit bayrakları (Flags)
+    // Çakışmaları ve bugları önleyecek kilit bayrakları (Flags)
     let lobbyInitDone = false;
     let asmpInitDone = false;
     let tpaInterval = null;
@@ -112,7 +112,7 @@ function createBot(username, isInitial = false) {
       if (reconnecting) return;
       reconnecting = true;
 
-      // Sonsuz TPA döngüsünü temizle (Hafıza sızıntısını önler)
+      // Çalışan TPA döngüsü varsa sızıntı yapmaması için temizle
       if (tpaInterval) {
         clearInterval(tpaInterval);
         tpaInterval = null;
@@ -120,6 +120,7 @@ function createBot(username, isInitial = false) {
 
       safeLog(`[-] ${username} bağlantısı koptu (${reasonSource}). 20 sn sonra baştan başlayacak...`);
       
+      // Web panelinde anlık olarak Çevrimdışı görünmesi için objeyi boşa çıkarıyoruz
       bots[username] = null;
 
       if (isInitial && !resolved) {
@@ -127,12 +128,13 @@ function createBot(username, isInitial = false) {
         resolve();
       }
 
+      // Eski botun soket bağlantı kalıntılarını temizle ve yeni botu tetikle
       try { bot.quit(); } catch (e) {}
       setTimeout(() => createBot(username, false), 20000);
     }
 
     bot.on("spawn", () => {
-      // PHASE 1: Ana lobi işlemleri
+      // PHASE 1: Ana lobi işlemleri (Sadece 1 kez tetiklenir)
       if (botPhase === 1 && !lobbyInitDone) {
         lobbyInitDone = true;
         safeLog(`[+] ${username} ana lobiye girdi.`);
@@ -154,36 +156,32 @@ function createBot(username, isInitial = false) {
           );
         }, 4000);
       } 
-      // PHASE 2: ASMP sunucusuna geçiş sonrası işlemler (Sonsuz TPA)
+      // PHASE 2: ASMP sunucusuna geçiş sonrası işlemler (Sadece 1 kez tetiklenir)
       else if (botPhase === 2 && !asmpInitDone) {
         asmpInitDone = true;
         safeLog(`[+] ${username} ASMP sunucusuna başarıyla geçti!`);
         
-        // İlk bağlantı gerçekleştikten hemen sonra (resolve tetiklemesi)
-        if (isInitial && !resolved) {
-          resolved = true;
-          resolve();
-        }
-
         setTimeout(() => {
           if (reconnecting) return;
-          
-          let count = 1;
-          // İlk TPA komutunu beklemeden hemen atıyoruz
-          bot.chat("/tpa laynox");
-          safeLog(`[!] ${username} -> /tpa laynox (Sonsuz Döngü - Başlangıç)`);
-
-          // Her 30 saniyede bir tekrarlayacak sonsuz döngü (30000 ms)
+          let count = 0;
           tpaInterval = setInterval(() => {
             if (reconnecting || !bot || !bot.entity) {
               clearInterval(tpaInterval);
               return;
             }
             bot.chat("/tpa laynox");
-            safeLog(`[!] ${username} -> /tpa laynox (Sonsuz Döngü - Sayım: ${count})`);
+            safeLog(`[!] ${username} -> /tpa laynox (${count + 1}/3)`);
             count++;
-          }, 30000); 
-
+            
+            if (count >= 3) {
+              clearInterval(tpaInterval);
+              safeLog(`[+] ${username} görevini tamamladı. Sınırsız beklemeye geçildi.`);
+              if (isInitial && !resolved) {
+                resolved = true;
+                resolve();
+              }
+            }
+          }, 4000);
         }, 4000);
       }
     });
@@ -191,7 +189,7 @@ function createBot(username, isInitial = false) {
     bot.on("goal_reached", () => {
       if (botPhase === 1 && !reconnecting) {
         safeLog(`[!] ${username} hedefe ulaştı ve kilitlendi.`);
-        bot.lookAt(BAKIS_COORD, true);
+        bot.lookAt(BAKIS_COORD, true); // true: anında bakmasını sağlar
         
         setTimeout(() => {
           if (reconnecting) return;
@@ -203,7 +201,7 @@ function createBot(username, isInitial = false) {
           );
           if (npc) bot.attack(npc);
           safeLog(`[!] ${username} sol tık attı.`);
-          botPhase = 2; // Bir sonraki spawn, ASMP aşamasını tetikler
+          botPhase = 2; // Bir sonraki spawn eventi artık ASMP aşamasını tetikleyecek
         }, 1000);
       }
     });
