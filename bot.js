@@ -12,7 +12,7 @@ const express = require("express");
 const botNames = ["storxy51", "storxy511", "storxy5111"];
 const password = "selam123";
 const serverIP = "play.aesirmc.com";
-const serverVersion = "1.19.4";
+const serverVersion = "1.20.1";
 
 const HEDEF_COORD = new Vec3(-64, 123, 363);
 const BAKIS_COORD = new Vec3(-65.663, 123, 362.92);
