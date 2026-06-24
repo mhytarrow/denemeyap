@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "mineflayer": "^4.22.0",
-    "mineflayer-pathfinder": "^2.5.1",
+    "mineflayer-pathfinder": "2.4.4",
     "vec3": "^0.1.9",
     "express": "^4.19.2"
   }
